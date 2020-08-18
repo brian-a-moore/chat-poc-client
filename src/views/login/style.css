@@ -1,0 +1,38 @@
+.login {
+    background: #B0BEC5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+.login .dialog {
+    float: left;
+    background: #fff;
+    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+    width: 100%;
+    max-width: 400px;
+}
+
+.login .dialog form label {
+    float: left;
+    width: 100%;
+    margin: 0 0 5px 0;
+}
+
+.login .dialog form input {
+    float: left;
+    width: 100%;
+    margin: 0 0 10px 0;
+}
+
+.login .dialog form .error {
+    color: red;
+    float: left;
+    width: 100%;
+    margin: 0 0 10px 0;
+}
+
+.login .dialog form button {
+    float: right;
+}
