@@ -1,33 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ioConnect, ioDisconnect, updateUsers, getChat, sendChat } from './socket';
-// import { useDebounce } from './hooks';
-import colors from './colors';
+import { ioConnect, ioDisconnect, updateUsers, getChat, sendChat, isTyping, whosTyping } from './socket';
+import { useDebounce } from './hooks';
 import moment from 'moment';
 import './style.css';
-
-const pickRandomColor = () => {
-    let length = colors.length;
-    let index = Math.floor(Math.random() * length);
-
-    return colors[index].hex;
-}
 
 const Room = ({ user }) => {
     const input = useRef(null);
     const [ message, setMessage ] = useState('');
     const [ messages, setMessages ] = useState([]);
-    const [ bubble, setBubble ] = useState(null);
     const [ users, setUsers ] = useState([]);
-    // const [ typers, setTypers ] = useState([]);
-
-    // Random color for chat bubbles
-    useEffect(() => {
-        setBubble(pickRandomColor());
-    }, []);
+    const [ typers, setTypers ] = useState([]);
+    const [ iAmTyping, setIAmTyping ] = useState(false);
 
     // Joining/Leaving the chat
     useEffect(() => {
         ioConnect(user);
+        updateUsers(setUsers);
         return () => ioDisconnect(user);
     }, [ user ]);
 
@@ -41,10 +29,6 @@ const Room = ({ user }) => {
             }]);
         }
     }, [ setMessages, messages ])
-
-    useEffect(() => {
-        updateUsers(setUsers)
-    }, [ setUsers ]);
 
     // Sending/Recieving a message
     const handleSubmit = e => {
@@ -60,29 +44,25 @@ const Room = ({ user }) => {
         });
     });
 
-    // Alerts other user's if you are typing (NEEDS FIX ON INFINITE LOOP)
-    // const debouncedMessage = useDebounce(message, 1000);
+    // Alerts other user's if you are typing
+    const debouncedMessage = useDebounce(message, 3000);
 
-    // useEffect(() => {
-    //     if(message) {
-    //         isTyping(user, true);
-    //     }
-    // }, [ message, user ]);
+    useEffect(() => {
+        isTyping(user, false);
+        setIAmTyping(false);
+    }, [ debouncedMessage, user ]);
 
-    // useEffect(() => {
-    //     isTyping(user, false);
-    // }, [ debouncedMessage, user ]);
+    useEffect(() => {
+        whosTyping((err, { user, bool }) => {
+            setTypers(t => {
+                if(bool && !t.includes(user)) return [...t, user];
+                else if(!bool && t.includes(user)) return t.filter(typer => typer !== user);
+                else return t;            
+            });
+        });
+    });
 
-    // useEffect(() => {
-    //     whosTyping((err, { bool, user }) => {
-    //         if(bool && !typers.includes(user)) setTypers([...typers, user]);
-    //         if(!bool && typers.includes(user)) {
-    //             const filteredTypers = typers.filter(typer => typer !== user);
-    //             setTypers(filteredTypers);
-    //         }
-    //     });
-    // });
-
+    // Set initial focus
     useEffect(() => input.current.focus(), []);
     
     return (
@@ -102,13 +82,18 @@ const Room = ({ user }) => {
             <div className='chat'>
                 {messages.map(message => {
                     if(message.type  === 'bot') return <Bot message={message} key={message.id} />;
-                    else if (message.user !== user) return <OtherMessage message={message} bubble={bubble} key={message.id} />
+                    else if (message.user !== user) return <OtherMessage message={message} key={message.id} />
                     else return <MyMessage message={message} key={message.id} />
                 })}
-                {/* {typers.length > 0 ? <Typers typers={typers} /> : null} */}
+                { typers.length > 0 ? <Typers typers={typers} /> : null }
             </div>
             <form className='input' onSubmit={e => handleSubmit(e)}>
-                <input type='text' ref={input} placeholder='Type message...' value={message} onChange={e => setMessage(e.target.value)} />
+                <input onKeyPress={() => {
+                    if(!iAmTyping) {
+                        isTyping(user, true);
+                        setIAmTyping(true);
+                    }
+                }} type='text' ref={input} placeholder='Type message...' value={message} onChange={e => setMessage(e.target.value)} />
                 <button className='primary'>Submit</button>
             </form>
         </div>
@@ -117,24 +102,21 @@ const Room = ({ user }) => {
 
 export default Room;
 
-// const Typers = ({ typers }) => {
-//     if(typers.length > 1) return <span>{typers.join(', ')} are typing...</span>
-//     else return <span>{typers[0]} is typing...</span>
-// };
-
-const Bot = ({ message }) => {
-    return(
-        <div className='bot-message'>
-            - {message.text} at {message.timestamp} -
-        </div>
-    );
+const Typers = ({ typers }) => {
+    if(typers) {
+        if(typers.length < 2) return <span className='typing'> {typers[0]} typing... </span>
+        else if(typers.length  === 2) return <span className='typing'> {typers[0]} and {typers[1]} are typing... </span>
+        else return <span className='typing'> {typers[0]} and {typers.length - 1} others are typing... </span>
+    } else return null;
 };
 
-const OtherMessage = ({ bubble, message }) => {
+const Bot = ({ message }) => <div className='bot-message'> - {message.text} at {message.timestamp} - </div>;
+
+const OtherMessage = ({ message }) => {
     return(
         <div className='chat-message'>
             <div className='icon-container'>
-                <span style={{ backgroundColor: bubble }}>{message.user.charAt(0)}</span>
+                <span style={{ backgroundColor: 'blue' }}>{message.user.charAt(0)}</span>
             </div>
             <div className='other-message'>
                 <p>{message.text}</p>
