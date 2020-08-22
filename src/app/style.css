@@ -11,12 +11,15 @@ body {
 #app {
     background: #fff;
     position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
 }
 
-h1, h2 {
-    background: #4CAF50;
+h1,
+h2 {
+    background: #4caf50;
     float: left;
     width: 100%;
     height: 40px;
@@ -37,7 +40,7 @@ input {
     height: 40px;
     line-height: 40px;
     padding: 0 10px;
-    border: 1px solid rgba(0,0,0,0.3);
+    border: 1px solid rgba(0, 0, 0, 0.3);
     outline: none;
 }
 
@@ -53,7 +56,7 @@ button {
 }
 
 button.primary {
-    background: #4CAF50;
+    background: #4caf50;
     color: #fff;
 }
 

@@ -1,5 +1,5 @@
 .login {
-    background: #B0BEC5;
+    background: #b0bec5;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -9,7 +9,7 @@
 .login .dialog {
     float: left;
     background: #fff;
-    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
     width: 100%;
     max-width: 400px;
 }
